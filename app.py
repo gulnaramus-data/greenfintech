@@ -133,8 +133,8 @@ def display_dashboard(df: pd.DataFrame, time_period: str = "Дни"):
                   delta=f"{active_clients_ratio - 30:.2f}% от целевого значения")
 
     with col3:
-        st.metric(label="🌿 Количество начисленных эко-баллов", value=f"{total_eco_points:,.0f}",
-                  delta=f"{total_eco_points - 500000:.0f} от целевого значения")
+        st.metric(label="🌿 Количество начисленных эко-баллов", value=f"{total_eco_points:,.2f}",
+                  delta=f"{total_eco_points - 500000:.2f} от целевого значения")
 
     with col4:
         st.metric(label="🎯 Целевой прогресс", value=f"{target_progress:.2f}%",
