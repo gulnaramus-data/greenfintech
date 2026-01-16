@@ -11,16 +11,14 @@ GreenScore is a green finance technology platform that analyzes users' banking t
 ## 🎯 Назначение и смысл использования / Purpose and Meaning of Use
 
 **Русский:**
-- **🌱 Для зеленого банковского дела:** Позволяет банкам отслеживать и поощрять экологически ответственные действия своих клиентов, способствуя переходу к устойчивым финансовым практикам.
+- **🌱🏦 Для зеленого банковского дела:** Позволяет банкам и финтеху отслеживать и поощрять экологически ответственные действия своих клиентов, способствуя переходу к устойчивым финансовым практикам. Это происходит благодаря рекомендательной системе для предложения клиентам зеленых банковских продуктов и услуг на основе их расходных привычек.
 - **🌿 Для клиентов:** Предоставляет возможность отслеживать свой экологический след через финансовые транзакции и получать вознаграждения за экологически ответственный образ жизни.
 - **🌎 Для развития устойчивости:** Способствует формированию осознанного потребительского поведения и поддерживает переход к более устойчивой экономике.
-- **💚 Для продвижения зеленых банковских продуктов:** Банки могут использовать рекомендательную систему для предложения клиентам экологически ориентированных банковских продуктов и услуг на основе их расходных привычек.
 
 **English:**
-- **🌱 For Green Banking:** Enables banks to track and incentivize environmentally responsible actions by their customers, promoting the transition to sustainable financial practices.
+- **🌱🏦 For Green Banking:** Enables banks and fintech to track and incentivize environmentally responsible actions by their customers, promoting the transition to sustainable financial practices. The recommendation system suggest environmentally-oriented banking products and services to customers based on their spending habits.
 - **🌿 For Customers:** Provides the ability to track their environmental footprint through financial transactions and earn rewards for environmentally conscious lifestyle choices.
 - **🌎 For Sustainability Development:** Promotes conscious consumer behavior and supports the transition to a more sustainable economy.
-- **💚 For Promoting Green Banking Products:** Banks can leverage the recommendation system to suggest environmentally-oriented banking products and services to customers based on their spending habits.
 
 ## 🚀 Как запустить приложение / How to Run the Application
 
