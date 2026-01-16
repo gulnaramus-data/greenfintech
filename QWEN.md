@@ -29,6 +29,11 @@ The application expects two CSV files:
 2. Ensure `transactions.csv` and `mcc_new.csv` are in the project root
 3. Run the application: `streamlit run app.py`
 
+## Testing
+The project includes a comprehensive test suite for the analysis module:
+- **test_analysis.py**: Contains unit tests for all functions in analysis.py
+- Run tests with: `python -m pytest test_analysis.py -v`
+
 ## User Interface
 The application provides two interfaces:
 - **Employee Interface**: Comprehensive dashboard with overall analytics, KPIs, and client analysis
@@ -53,3 +58,4 @@ Users receive status based on their GreenScore:
 - Pandas is used for data manipulation and analysis
 - The project includes synthetic data generation notebook (GreenFinTech.ipynb) for testing purposes
 - Caching is implemented for data loading functions to improve performance
+- Comprehensive unit tests are provided for the analysis module
