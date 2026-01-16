@@ -18,42 +18,68 @@ def create_pie_chart_green_vs_not_green(df: pd.DataFrame) -> go.Figure:
     status_counts = df['status'].value_counts().reset_index()
     status_counts.columns = ['Status', 'Count']
 
+    # Map status values to Russian labels
+    status_labels = {'green': 'зелёные', 'not green': 'незелёные'}
+    status_counts['StatusLabel'] = status_counts['Status'].map(status_labels)
+
     fig = px.pie(status_counts,
                  values='Count',
-                 names='Status',
-                 title='Доля зелёных и не зелёных транзакций',
-                 color_discrete_map={'green': '#B5F299', 'not green': '#A0B4F2'})
+                 names='StatusLabel',
+                 title='Доля зелёных и незелёных транзакций')
+
+    # Update colors explicitly
+    fig.update_traces(marker=dict(colors=['#91A0F2', '#B5F299']))
 
     return fig
 
-def create_line_chart_green_trend(df: pd.DataFrame) -> go.Figure:
+def create_line_chart_green_trend(df: pd.DataFrame, time_period: str = "Месяцы") -> go.Figure:
     """
-    Create a line chart showing the trend of green transactions over months.
+    Create a line chart showing the trend of green transactions over time.
 
     Args:
         df: DataFrame with transaction data including 'date' and 'status' columns
+        time_period: Time aggregation period ("Дни", "Недели", "Месяцы")
 
     Returns:
         Plotly figure object
     """
-    # Extract month-year from date
-    df_monthly = df.copy()
-    df_monthly['month_year'] = df_monthly['date'].dt.to_period('M')
+    # Create a copy of the dataframe
+    df_time = df.copy()
 
-    # Calculate monthly green transaction percentage
-    monthly_stats = df_monthly.groupby(['month_year', 'status']).size().unstack(fill_value=0)
-    monthly_stats['total'] = monthly_stats.sum(axis=1)
-    monthly_stats['green_percentage'] = (monthly_stats.get('green', 0) / monthly_stats['total']) * 100
+    # Convert time_period to appropriate grouping
+    if time_period == "Дни":
+        df_time['period'] = df_time['date'].dt.date
+    elif time_period == "Недели":
+        df_time['period'] = df_time['date'].dt.to_period('W')
+    else:  # Месяцы
+        df_time['period'] = df_time['date'].dt.to_period('M')
+
+    # Calculate green transaction percentage by period
+    period_stats = df_time.groupby(['period', 'status']).size().unstack(fill_value=0)
+    period_stats['total'] = period_stats.sum(axis=1)
+    period_stats['green_percentage'] = (period_stats.get('green', 0) / period_stats['total']) * 100
 
     # Reset index and convert period back to timestamp for plotting
-    monthly_stats = monthly_stats.reset_index()
-    monthly_stats['date'] = monthly_stats['month_year'].dt.start_time
+    period_stats = period_stats.reset_index()
+    if time_period == "Дни":
+        period_stats['date_for_plot'] = pd.to_datetime(period_stats['period'])
+    elif time_period == "Недели":
+        period_stats['date_for_plot'] = period_stats['period'].dt.start_time
+    else:  # Месяцы
+        period_stats['date_for_plot'] = period_stats['period'].dt.start_time
 
-    fig = px.line(monthly_stats,
-                  x='date',
+    # Adjust title and axis label based on time period
+    period_label = {
+        "Дни": "дням",
+        "Недели": "неделям",
+        "Месяцы": "месяцам"
+    }.get(time_period, time_period.lower())
+
+    fig = px.line(period_stats,
+                  x='date_for_plot',
                   y='green_percentage',
-                  title='Динамика зелёных транзакций по месяцам',
-                  labels={'date': 'Месяц', 'green_percentage': 'Процент зелёных транзакций'})
+                  title=f'Динамика зелёных транзакций по {period_label}',
+                  labels={'date_for_plot': time_period, 'green_percentage': 'Процент зелёных транзакций'})
 
     fig.update_traces(line=dict(color='#B5F299'))
     fig.update_layout(yaxis_title="Процент зелёных транзакций (%)")
@@ -91,9 +117,9 @@ def create_bar_chart_top_green_categories(df: pd.DataFrame) -> go.Figure:
 
     return fig
 
-def c11(df: pd.DataFrame) -> go.Figure:
+def create_bar_chart_top_green_users(df: pd.DataFrame) -> go.Figure:
     """
-    Create a BAR chart showing top 5 users by percentage of green transactions.
+    Create a bar chart showing top 5 users by percentage of green transactions.
     Users are sorted in descending order by green transaction percentage.
     Each bar represents one user (ID on x-axis, % on y-axis).
     """
@@ -128,13 +154,14 @@ def c11(df: pd.DataFrame) -> go.Figure:
     
     return fig
 
-def create_user_green_score_trend(df: pd.DataFrame, user_id: int) -> go.Figure:
+def create_user_green_score_trend(df: pd.DataFrame, user_id: int, time_period: str = "Дни") -> go.Figure:
     """
     Create a line chart showing the personal green score trend for a specific user.
 
     Args:
         df: DataFrame with transaction data
         user_id: ID of the user to analyze
+        time_period: Time aggregation period ("Дни", "Недели", "Месяцы")
 
     Returns:
         Plotly figure object
@@ -142,23 +169,44 @@ def create_user_green_score_trend(df: pd.DataFrame, user_id: int) -> go.Figure:
     # Filter data for the specific user
     user_df = df[df['user_id'] == user_id].copy()
 
-    # Group by date and calculate green score for each day
-    user_df['date_only'] = user_df['date'].dt.date
-    daily_stats = user_df.groupby('date_only').agg({
+    # Group by the selected time period and calculate green score
+    if time_period == "Дни":
+        user_df['period'] = user_df['date'].dt.date
+    elif time_period == "Недели":
+        user_df['period'] = user_df['date'].dt.to_period('W')
+    else:  # Месяцы
+        user_df['period'] = user_df['date'].dt.to_period('M')
+
+    period_stats = user_df.groupby('period').agg({
         'status': lambda x: (x == 'green').sum() / len(x) * 100,  # Green percentage
         'amount': 'sum'  # Total amount
     }).reset_index()
 
-    daily_stats.columns = ['date', 'green_percentage', 'total_amount']
+    period_stats.columns = ['period', 'green_percentage', 'total_amount']
 
     # Calculate rolling average for smoother trend
-    daily_stats['rolling_avg'] = daily_stats['green_percentage'].rolling(window=7, min_periods=1).mean()
+    period_stats['rolling_avg'] = period_stats['green_percentage'].rolling(window=7, min_periods=1).mean()
 
-    fig = px.line(daily_stats,
-                  x='date',
+    # Convert period back to datetime for plotting
+    if time_period == "Дни":
+        period_stats['date_for_plot'] = pd.to_datetime(period_stats['period'])
+    elif time_period == "Недели":
+        period_stats['date_for_plot'] = period_stats['period'].dt.start_time
+    else:  # Месяцы
+        period_stats['date_for_plot'] = period_stats['period'].dt.start_time
+
+    # Adjust title based on time period
+    period_label = {
+        "Дни": "дням",
+        "Недели": "неделям",
+        "Месяцы": "месяцам"
+    }.get(time_period, time_period.lower())
+
+    fig = px.line(period_stats,
+                  x='date_for_plot',
                   y='rolling_avg',
-                  title=f'Личная динамика GreenScore пользователя {user_id}',
-                  labels={'rolling_avg': 'GreenScore (%)', 'date': 'Дата'})
+                  title=f'Личная динамика GreenScore пользователя {user_id} по {period_label}',
+                  labels={'rolling_avg': 'GreenScore (%)', 'date_for_plot': time_period})
 
     fig.update_traces(line=dict(color='#B5F299'))
     fig.update_layout(yaxis_title="GreenScore (%)")

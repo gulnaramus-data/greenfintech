@@ -168,89 +168,106 @@ def get_client_activity_period(df: pd.DataFrame, user_id: int) -> Tuple[str, str
     return (first_date, last_date)
 
 
-def get_client_status(green_score: float) -> str:
+def get_client_status(green_score: float, is_top_user: bool = False) -> str:
     """
-    Determine client status based on GreenScore.
-    
+    Determine client status based on GreenScore and top user status.
+
     Args:
         green_score: GreenScore of the client (0-100)
-        
+        is_top_user: Whether the user is in the top 5 green users (default False)
+
     Returns:
         Status string
     """
-    if green_score >= 25:
+    if is_top_user or green_score >= 25:
         return "Эко-лидер"
     elif green_score >= 15:
-        return "Активный участник green-программы"
+        return "Активный участник программы"
     elif green_score >= 5:
         return "Осваивает зелёные привычки"
     else:
         return "Новичок в устойчивости"
 
 
-def get_personalized_recommendations(df: pd.DataFrame, user_id: int) -> List[str]:
+def get_user_benefits(green_score: float, eco_points: int, is_top_user: bool = False) -> Tuple[str, List[str], List[str]]:
     """
-    Generate personalized recommendations for a specific client.
-    
+    Get benefits available to a user based on their GreenScore and eco points.
+
     Args:
-        df: DataFrame with transaction data
-        user_id: ID of the user to analyze
-        
+        green_score: GreenScore of the user (0-100)
+        eco_points: Number of eco points earned
+        is_top_user: Whether the user is in the top 5 green users
+
     Returns:
-        List of recommendation strings
+        Tuple of (status, unlocked benefits, locked benefits)
     """
-    recommendations = []
-    user_transactions = df[df['user_id'] == user_id]
-    
-    if len(user_transactions) == 0:
-        return ["Нет данных для формирования рекомендаций"]
-    
-    # Check for high spending in non-green categories
-    non_green_transactions = user_transactions[user_transactions['status'] == 'not green']
-    if len(non_green_transactions) > 0:
-        top_non_green_categories = non_green_transactions.groupby('category')['amount'].sum().nlargest(3)
-        
-        for category, amount in top_non_green_categories.items():
-            if 'кафе' in category.lower() or 'ресторан' in category.lower() or 'кофе' in category.lower():
-                recommendations.append(
-                    f"Вы часто покупаете кофе в одноразовых стаканчиках. "
-                    f"Попробуйте кафе с системами многоразовой посуды — это добавляет +10 баллов!"
-                )
-                break  # Add only one recommendation for this pattern
-            
-            elif 'авто' in category.lower() or 'бензин' in category.lower() or 'автозаправка' in category.lower():
-                recommendations.append(
-                    f"Вы часто тратитесь на бензин. Рассмотрите возможность использования общественного "
-                    f"транспорта или каршеринга — это может добавить до +15 баллов!"
-                )
-                break  # Add only one recommendation for this pattern
-    
-    # If no specific recommendations were generated, provide a general one
-    if not recommendations:
-        recommendations.append(
-            "Продолжайте использовать зелёные сервисы! "
-            "Каждая ваша транзакция в экологичных категориях помогает окружающей среде."
-        )
-    
-    # Add recommendation if greenscore is low
-    greenscore = get_client_greenscore(df, user_id)
-    if greenscore < 10:
-        recommendations.append(
-            "Вы можете увеличить свой GreenScore, выбирая больше экологичных товаров и услуг. "
-            "Начните с малого — например, используйте многоразовые сумки при покупках."
-        )
-    
-    return recommendations
+    # Determine status based on GreenScore and top user status
+    if is_top_user or green_score >= 25:
+        status = "Эко-лидер"
+        available = [
+            ("📉 -0.3% по «зелёному» автокредиту", 10_000),
+            ("🧑‍💼 Персональный ESG-консультант", 50_000),
+            ("🌍 Участие в закрытых экопроектах", 100_000)
+        ]
+    elif green_score >= 15:
+        status = "Активный участник программы"
+        available = [
+            ("📈 +0.3% по «зелёному» вкладу", 5_000),
+            ("🚗 Сертификат на тест-драйв ЭМ", 2_000),
+            ("💳 Бесплатное обслуживание Green Card", 0)  # без баллов
+        ]
+    elif green_score >= 5:
+        status = "Осваивает зелёные привычки"
+        available = [
+            ("🚲 Месяц велопроката", 1_000),
+            ("📊 Персональный ESG-отчёт", 0)
+        ]
+    else:
+        status = "Новичок в устойчивости"
+        available = [
+            ("🌱 Советы по «зелёным» покупкам", 0),
+            ("🏆 Доступ к рейтингу GreenScore", 0)
+        ]
+
+    # Filter benefits that the user can afford
+    unlocked = [name for name, cost in available if eco_points >= cost]
+    locked = [f"{name} (нужно ещё {cost - eco_points:,} баллов)"
+              for name, cost in available if eco_points < cost and cost > 0]
+
+    return status, unlocked, locked
 
 
 def get_unique_users(df: pd.DataFrame) -> List[int]:
     """
     Get a list of unique user IDs.
-    
+
     Args:
         df: DataFrame with transaction data
-        
+
     Returns:
         List of unique user IDs
     """
     return sorted(df['user_id'].unique().tolist())
+
+
+def get_top_green_users(df: pd.DataFrame, n: int = 5) -> List[int]:
+    """
+    Get the top N users by percentage of green transactions.
+
+    Args:
+        df: DataFrame with transaction data
+        n: Number of top users to return (default 5)
+
+    Returns:
+        List of top N user IDs sorted by green transaction percentage
+    """
+    # Calculate green percentage for each user
+    user_stats = df.groupby('user_id')['status'].apply(
+        lambda x: (x == 'green').sum() / len(x) * 100
+    ).reset_index()
+    user_stats.columns = ['user_id', 'green_percentage']
+
+    # Sort by green percentage in descending order and return top N user IDs
+    top_users = user_stats.nlargest(n, 'green_percentage')['user_id'].tolist()
+
+    return top_users

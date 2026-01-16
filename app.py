@@ -24,7 +24,7 @@ from analysis import (
     get_client_eco_points,
     get_client_activity_period,
     get_client_status,
-    get_personalized_recommendations,
+    get_user_benefits,
     get_unique_users,
     get_top_green_users
 )
@@ -143,8 +143,7 @@ def display_dashboard(df: pd.DataFrame, time_period: str = "Дни"):
     # Charts - arrange differently
     st.plotly_chart(create_pie_chart_green_vs_not_green(df), use_container_width=True)
 
-    # Pass the selected time period to the line chart function
-    st.plotly_chart(create_line_chart_green_trend(df, time_period=time_period), use_container_width=True)
+    st.plotly_chart(create_line_chart_green_trend(df, time_period), use_container_width=True)
 
     # Top green categories and users in separate rows
     st.plotly_chart(create_bar_chart_top_green_categories(df), use_container_width=True)
@@ -270,31 +269,57 @@ def display_client_analysis(df: pd.DataFrame, time_period: str = "Дни"):
             )
 
             # Charts for selected user - arrange differently
-            st.plotly_chart(create_user_green_score_trend(df, selected_user, time_period=time_period), use_container_width=True)
+            st.plotly_chart(create_user_green_score_trend(df, selected_user, time_period), use_container_width=True)
             st.plotly_chart(create_user_top_green_categories(df, selected_user), use_container_width=True)
 
             # Top non-green categories and recommendations in separate rows
             st.plotly_chart(create_user_top_non_green_categories(df, selected_user), use_container_width=True)
 
-            # Personalized recommendations
-            st.subheader("💡 Персонализированные рекомендации")
-            recommendations = get_personalized_recommendations(df, selected_user)
+            # User benefits
+            st.subheader("🎁 Доступные преимущества:")
 
-            # Display recommendations with colored background
-            for rec in recommendations:
-                st.markdown(
-                    f"""
-                    <div style="
-                        background-color: #B5F299;
-                        padding: 10px;
-                        border-radius: 5px;
-                        margin-bottom: 10px;
-                    ">
-                        💡 {rec}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+            # Calculate user's eco points and status
+            eco_points = get_client_eco_points(df, selected_user)
+            greenscore = get_client_greenscore(df, selected_user)
+            top_users = get_top_green_users(df, 5)
+            is_top_user = selected_user in top_users
+
+            status, unlocked, locked = get_user_benefits(greenscore, eco_points, is_top_user)
+
+            # Display unlocked benefits
+            if unlocked:
+                for benefit in unlocked:
+                    st.markdown(
+                        f"""
+                        <div style="
+                            background-color: #B5F299;
+                            padding: 10px;
+                            border-radius: 5px;
+                            margin-bottom: 10px;
+                        ">
+                            {benefit}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+            # Display locked benefits
+            if locked:
+                st.markdown("### 🔒 Недоступные преимущества:")
+                for benefit in locked:
+                    st.markdown(
+                        f"""
+                        <div style="
+                            background-color: #F2B5B5;
+                            padding: 10px;
+                            border-radius: 5px;
+                            margin-bottom: 10px;
+                        ">
+                            ❌ {benefit}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
 
 def client_interface(df: pd.DataFrame, time_period: str = "Дни"):
@@ -361,31 +386,57 @@ def client_interface(df: pd.DataFrame, time_period: str = "Дни"):
             )
 
             # Charts for selected user - arrange differently
-            st.plotly_chart(create_user_green_score_trend(df, selected_user, time_period=time_period), use_container_width=True)
+            st.plotly_chart(create_user_green_score_trend(df, selected_user, time_period), use_container_width=True)
             st.plotly_chart(create_user_top_green_categories(df, selected_user), use_container_width=True)
 
             # Top non-green categories and recommendations in separate rows
             st.plotly_chart(create_user_top_non_green_categories(df, selected_user), use_container_width=True)
 
-            # Personalized recommendations
-            st.subheader("💡 Персонализированные рекомендации")
-            recommendations = get_personalized_recommendations(df, selected_user)
+            # User benefits
+            st.subheader("🎁 Доступные преимущества:")
 
-            # Display recommendations with colored background
-            for rec in recommendations:
-                st.markdown(
-                    f"""
-                    <div style="
-                        background-color: #B5F299;
-                        padding: 10px;
-                        border-radius: 5px;
-                        margin-bottom: 10px;
-                    ">
-                        💡 {rec}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+            # Calculate user's eco points and status
+            eco_points = get_client_eco_points(df, selected_user)
+            greenscore = get_client_greenscore(df, selected_user)
+            top_users = get_top_green_users(df, 5)
+            is_top_user = selected_user in top_users
+
+            status, unlocked, locked = get_user_benefits(greenscore, eco_points, is_top_user)
+
+            # Display unlocked benefits
+            if unlocked:
+                for benefit in unlocked:
+                    st.markdown(
+                        f"""
+                        <div style="
+                            background-color: #B5F299;
+                            padding: 10px;
+                            border-radius: 5px;
+                            margin-bottom: 10px;
+                        ">
+                            {benefit}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+            # Display locked benefits
+            if locked:
+                st.markdown("### 🔒 Недоступные преимущества:")
+                for benefit in locked:
+                    st.markdown(
+                        f"""
+                        <div style="
+                            background-color: #F2B5B5;
+                            padding: 10px;
+                            border-radius: 5px;
+                            margin-bottom: 10px;
+                        ">
+                            ❌ {benefit}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
 
 if __name__ == "__main__":
