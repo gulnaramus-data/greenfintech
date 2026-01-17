@@ -28,14 +28,14 @@ GreenScore is a green finance technology platform that analyzes users' banking t
 2. Убедитесь, что файлы `transactions.csv` и `mcc_new.csv` находятся в корне проекта
 3. Запустите приложение: `streamlit run app.py`
 
-**Online Version:**
-You can access the application online at: https://greenscoreforgreenfintech.streamlit.app/
-
 **Local Launch:**
 
 1. Install dependencies: `pip install -r requirements.txt`
 2. Ensure `transactions.csv` and `mcc_new.csv` files are in the project root
 3. Run the application: `streamlit run app.py`
+
+**Online Version:**
+You can access the application online at: https://greenscoreforgreenfintech.streamlit.app/
 
 ## 🌐 Ссылка на приложение / Application Link
 
@@ -77,3 +77,11 @@ https://greenscoreforgreenfintech.streamlit.app/
 **Alternative column names accepted:**
 - For MCC status: `green_status`, `is_green`, or `color` (instead of `status`) 🏷️
 - For MCC code: `mcc` or `mcc_cd` (instead of `mcc_code`) 🏷️
+
+## GitHub Actions CI/CD Setup / Настройка непрерывной интеграции и доставки
+
+**Русский:**
+Этот проект включает в себя рабочий процесс GitHub Actions, который автоматически запускает тесты и собирает/размещает Docker-образ в Docker Hub при успешном прохождении тестов.
+
+**English:**
+This project includes a GitHub Actions workflow that automatically runs tests and builds/pushes the Docker image to Docker Hub when tests pass.
