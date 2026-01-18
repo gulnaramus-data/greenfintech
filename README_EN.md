@@ -1,7 +1,7 @@
 # 🌱 GreenScore - Green Finance Technology Platform 🌍
 
 ## 📋 Description
-[English version](README_EN.md) | [Версия на русском](README_RU.md)
+[English version](README_EN.md) | [Версия на русском](README.md)
 
 GreenScore is a green finance technology platform that analyzes users' banking transactions and classifies them as "green" or "non-green" based on predefined rules and Merchant Category Codes (MCC). The application awards "eco-points" for green transactions and displays statistics and progress on a personal dashboard. This solution promotes green banking by allowing banks and their customers to track and encourage environmentally responsible purchases.
 
